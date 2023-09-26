@@ -19,9 +19,21 @@ import matplotlib.pyplot as plt
 #     labels = img_name.split('_')
 #     if labels[2] != '0' and labels[4] == '2' and labels[5] not in ['75', '90']:
 #       os.remove(img)
+def extract_all(path):
+  since = time()
+  zip_paths = glob.glob(path + f'/*.zip')
+  extract_path = path + '/extracted_all'
+  print('======Extracting all=====')
+  for zip_path in tqdm(zip_paths):
+    # 압축 파일을 열기
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+      zip_ref.extractall(extract_path)
+  time_elapsed = time() - since
+  print('압축해제 완료 > {:.2f} 소요'.format(time_elapsed))
+
 
 # zip파일을 압축해제하는 함수
-def extraction(path, labels=False):
+def extraction(path, json=False):
   since = time()
   zip_paths = glob.glob(path + f'/*.zip')
   extract_path = path + '/extracted'
@@ -29,32 +41,29 @@ def extraction(path, labels=False):
   for zip_path in tqdm(zip_paths):
     # 압축 파일을 열기
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        file_list = zip_ref.namelist()
         # json 파일 추출
-        if labels:
-          zip_ref.extractall(extract_path)
-          os.remove(zip_path)
-        # 이미지 파일 추출
-        else:
-          # 압축 파일 내에 있는 모든 파일 리스트 뽑기
-          file_list = zip_ref.namelist()
-          for file in tqdm(file_list):
+        for file in file_list:
+          if json:
+            if file.endswith('.json'):
+              labels = file.split('_')
+              if labels[5] == '2' and labels[6] in ['75', '90']:
+                zip_ref.extract(file, extract_path)
+
+          # 이미지 파일 추출
+          else:
+            # 압축 파일 내에 있는 모든 파일 리스트 뽑기
             if file.endswith('.png'):
               # 알약 5000종 중, 1천종의 경구약제는 배경 3종(0, 1, 2, 3)에 카메라 위도가 4종(65, 70, 75, 90)으로 구성
-              # 알약 4천종의 경질/연질 캡술은 단일 배경(0), 카메라 위도가 2종(75, 90)으로 구성
+              # 알약 4천종의 경질/연질 캡술은 단일 배경, 카메라 위도가 2종(75, 90)으로 구성
               # 조명은 알약 5천종 모두가 주광색, 주백색, 전구색으로 구성
               # 컴퓨터 자원의 부족으로 공통된 부분만 추출하기로 결정
-              # labels[2]: 배경색상 - 0 만 선택
               # labels[4]: 조명색상 - 노란빛이 없이 가장 밝고 분명한 2(주광색 추정)만 추출
               # labels[5]: 카메라 위도 - 75도, 90도만 추출
               labels = file.split('_')
-              if labels[2] == '0' and labels[4] == '2' and labels[5] in ['75', '90']:
+              if labels[4] == '2' and labels[5] in ['75', '90']:
                 zip_ref.extract(file, extract_path)
-
-                break
-          # 파일 리스트 중,
-
-      #   zip_ref.extractall(extract_path)
-      # os.remove(zip_path)
+    # os.remove(zip_path)
 
   time_elapsed = time() - since
   print('압축해제 완료 > {:.2f} 소요'.format(time_elapsed))
@@ -136,6 +145,7 @@ if __name__ == '__main__':
   crop_paths = 'D:/data/training/sources/cropped'
 
   # 압축해제
-  extraction(label_path, labels=True)
+  extraction(label_path, json=True)
   # extraction(source_path)
+  # extract_all(label_path)
   # crop(img_paths, crop_paths)
