@@ -12,13 +12,6 @@ from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 
 
-# def rm_noobs(path):
-#   img_files = glob.glob(path + '/*/*.jpg')
-#   for img in tqdm(img_files):
-#     img_name = img.split('\\')[-1]
-#     labels = img_name.split('_')
-#     if labels[2] != '0' and labels[4] == '2' and labels[5] not in ['75', '90']:
-#       os.remove(img)
 def extract_all(path):
   since = time()
   zip_paths = glob.glob(path + f'/*.zip')
@@ -32,8 +25,9 @@ def extract_all(path):
   print('압축해제 완료 > {:.2f} 소요'.format(time_elapsed))
 
 
-# zip파일을 압축해제하는 함수
-def extraction(path, json=False):
+# 대규모 학습 데이터셋 사용시 특정 조건의 파일만 추출
+# 자원이 부족하므로 일부 데이터로만 학습시킬 예정이므로 해당 함수 말고 단순 압축해제 함수인 extract_all 을 사용
+def extract(path, json=False):
   since = time()
   zip_paths = glob.glob(path + f'/*.zip')
   extract_path = path + '/extracted'
@@ -63,6 +57,7 @@ def extraction(path, json=False):
               labels = file.split('_')
               if labels[4] == '2' and labels[5] in ['75', '90']:
                 zip_ref.extract(file, extract_path)
+
     # os.remove(zip_path)
 
   time_elapsed = time() - since
@@ -79,15 +74,17 @@ def rmdir_empty(path):
 
 # 크롭
 def crop(image_paths, crop_path):
+    if not os.path.isdir(crop_path):
+      os.mkdir(crop_path)
 
     # 각 이미지파일마다 반복
     for img_path in tqdm(image_paths):
         # json파일이 저장된 상위 디렉토리
         dir_name = img_path.split('\\')[-2]
-        dir_path = f'D:/data/training/sources/extracted/{dir_name}'
+        dir_path = f'D:/data/training/sources/extracted_all/{dir_name}'
         # 파일 이름(확장자 X)
         file_name = img_path.split('\\')[-1].split('.png')[0]
-        json_path = f'D:/data/training/labels/extracted/{dir_name}_json/{file_name}.json'
+        json_path = f'D:/data/training/labels/extracted_all/{dir_name}_json/{file_name}.json'
         if os.path.isfile(json_path):
             with open(json_path, 'r', encoding='utf-8') as f:
                 json_data = json.load(f)
@@ -141,11 +138,10 @@ def crop(image_paths, crop_path):
 if __name__ == '__main__':
   source_path = 'D:/data/training/sources'
   label_path = 'D:/data/training/labels'
-  img_paths = glob.glob('D:/data/training/sources/extracted/*/*.png')
+  img_paths = glob.glob('D:/data/training/sources/extracted_all/*/*.png')
   crop_paths = 'D:/data/training/sources/cropped'
 
   # 압축해제
-  extraction(label_path, json=True)
-  # extraction(source_path)
   # extract_all(label_path)
-  # crop(img_paths, crop_paths)
+  # extract_all(source_path)
+  crop(img_paths, crop_paths)
