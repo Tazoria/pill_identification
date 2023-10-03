@@ -1,10 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Title</title>
-</head>
-<body>
-  <h1>안녕 원숭이들아</h1>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block content %}
+<div class="col-6">
+  <h1>MyPill</h1>
+  <h4>알약 사진을 첨부해주세요.</h4>
+  <form action="/upload" method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" id="fileInput">
+        <input type="submit" value="업로드">
+  </form>
+</div>
+{% endblock %}
