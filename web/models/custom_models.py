@@ -65,7 +65,7 @@ class QuantizedCustomMobileNetV3Large(nn.Module):
 
 class CustomMnasNet1_3(models.MNASNet):
     def __init__(self, num_classes=1000):
-        super(CustomMnasNet1_3, self).__init__()
+        super(CustomMnasNet1_3, self).__init__(alpha=1)
 
         # 기본 MNASNet 모델의 classifier 부분을 새로운 classifier로 교체
         self.classifier = nn.Sequential(
