@@ -1,11 +1,39 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="col-6">
-  <h1>MyPill</h1>
-  <h4>알약 사진을 첨부해주세요.</h4>
-  <form action="/upload" method="POST" enctype="multipart/form-data">
-        <input type="file" name="file" id="fileInput">
+    <h1>MyPill</h1>
+    <h4 style="color: red">주의!</h4>
+    <p>식별문자가 잘 나온 앞면 사진으로 첨부해주세요.</p>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <input type="file" name="imageInput" id="imageInput">
         <input type="submit" value="업로드">
-  </form>
+    </form>
+    <div id="resultDiv"></div>
 </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    $("#uploadForm").submit(function(event) {
+        event.preventDefault();
+        var formData = new FormData(this);
+
+        $.ajax({
+            type: "POST",
+            url: "/upload",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                // 결과를 처리하는 로직을 여기에 추가
+                var prediction = response.prediction;
+                // 예측 결과를 resultDiv에 표시하거나 다른 작업 수행
+                $("#resultDiv").html("분류 결과: " + prediction);
+            },
+            error: function(error) {
+                console.error(error);
+            }
+        });
+    });
+});
+</script>
 {% endblock %}
