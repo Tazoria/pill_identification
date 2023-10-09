@@ -1,4 +1,5 @@
 import os
+import shutil
 import json
 from time import time
 import glob
@@ -135,6 +136,40 @@ def crop(image_paths, crop_path):
     print('\n>>>>>>>>>> 파일 크롭 완료 <<<<<<<<<<\n')
 
 
+# 배경 이미지가 여러가지인 경우와 단색인 경우가 있어 데이터가 불균형하므로 단색으로 통일
+# def fix_backgroundcolor(crop_paths):
+#   images = glob.glob(crop_paths + '/*/*.jpg')
+#   for img in tqdm(images):
+#     background = img.split('_')[2]
+#     if background != '0':
+#       label = img.split('\\')[1]
+#       destination_folder = crop_paths + f'\\removed\\{label}'
+#       if not os.path.exists(destination_folder):
+#         os.makedirs(destination_folder)
+#       shutil.move(img, destination_folder)
+
+
+def find_folders_with_large_file_count(crop_paths, threshold):
+  # 결과를 저장할 리스트 초기화
+  result_folders = []
+  result_count = []
+
+  # base_directory에서 하위 디렉토리 순회
+  for root, dirs, files in os.walk(crop_paths):
+    # 현재 하위 폴더의 파일 개수 계산
+    file_count = len(files)
+
+    # 개수가 지정한 임계값보다 큰 경우 폴더 경로 저장
+    if file_count > threshold:
+      result_folders.append(root)
+      result_count.append(file_count)
+
+  print(f'데이터가 많은 폴더: {len(result_folders)}개', result_folders[:5])
+  print('데이터 수: ', result_count[:5])
+
+  return result_folders, result_count
+
+
 if __name__ == '__main__':
   source_path = 'D:/data/training/sources'
   label_path = 'D:/data/training/labels'
@@ -144,4 +179,7 @@ if __name__ == '__main__':
   # 압축해제
   # extract_all(label_path)
   # extract_all(source_path)
-  crop(img_paths, crop_paths)
+  # crop(img_paths, crop_paths)
+  result_folders, result_count = find_folders_with_large_file_count(crop_paths, 216)
+
+
