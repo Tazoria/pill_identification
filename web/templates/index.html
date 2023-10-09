@@ -4,7 +4,7 @@
     <h1>MyPill</h1>
     <h4 style="color: red">주의!</h4>
     <p>식별문자가 잘 나온 앞면 사진으로 첨부해주세요.</p>
-    <form action="/upload" method="POST" enctype="multipart/form-data">
+    <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
         <input type="file" name="imageInput" id="imageInput">
         <input type="submit" value="업로드">
     </form>
@@ -26,8 +26,19 @@ $(document).ready(function() {
             success: function(response) {
                 // 결과를 처리하는 로직을 여기에 추가
                 var prediction = response.prediction;
+                var pill_name = response.pill_name;
+                var pill_company = response.pill_company;
+                var pill_class = response.pill_class;
+                var pill_image = response.pill_image;
+
                 // 예측 결과를 resultDiv에 표시하거나 다른 작업 수행
-                $("#resultDiv").html("분류 결과: " + prediction);
+                 $("#resultDiv").html("<ul>" +
+                    "<li>분류 결과: " + prediction + "</li>" +
+                    "<li>약 이름: " + pill_name + "</li>" +
+                    "<li>제조사: " + pill_company + "</li>" +
+                    "<li>분류 번호: " + pill_class + "</li>" +
+                    "<li>약 이미지: <img src='" + pill_image + "' alt='약 이미지' width='800px'></li>" +
+                    "</ul>");
             },
             error: function(error) {
                 console.error(error);
