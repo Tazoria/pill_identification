@@ -1,6 +1,7 @@
 import json
 import pickle
 import cv2
+from PIL import Image
 import numpy as np
 import torch
 import glob
@@ -12,19 +13,41 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(device)
+
 
 def home(request):
   return render(request, 'index.html')
 
 
 def get_model():
+  # 모델 및 다른 정보 불러오기
+  load_path = 'web/models/save/mobilenet_epoch10_batch128_pretrained_noQuantize.pth'
+  checkpoint = torch.load(load_path)
   model = CustomMobileNetV3Large(num_classes=500)
-  checkpoint = torch.load('web/models/save/CustomMobileNetV3Large_epoch5_quntize(False).pth')
-  model.load_state_dict(checkpoint['model_state_dict'])
+  model.load_state_dict(checkpoint['model_state_dict'])  # 모델 가중치 불러오기
+  print(f'Model loaded from {load_path}')
+
+  model.to(device)
+  model.eval()
 
   return model
 
 
+def preprocess(file_path):
+  image = Image.open(file_path)
+  desired_size = (224, 224)
+  image = image.resize(desired_size)
+
+  # 사진을 모델 입력에 맞게 resize
+  image_transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+  ])
+  image_tensor = image_transform(image).unsqueeze(0)
+
+  return image_tensor
 # def predict(image_tensor):
 #   model = get_model()
 #   outputs = model(image_tensor)
@@ -34,10 +57,12 @@ def get_model():
 #     prediction = classes[prediction.item()]
 #
 #   return prediction
+
+
 def predict(image_tensor):
-  model = get_model().eval()
+  model = get_model()
   with torch.no_grad():
-    outputs = model(image_tensor)
+    outputs = model(image_tensor.to(device))
     _, top5 = torch.topk(outputs, k=5, dim=1)  # 상위 5개 예측
     top1 = top5[:, 0].item()
     print('='*10)
@@ -46,37 +71,32 @@ def predict(image_tensor):
   #   top1 = predicted[:, 0]
   with open('web/models/save/classes_batch128.pkl', 'rb') as pickle_file:
     classes = pickle.load(pickle_file)
-    print('classes > ', classes[:5])
     prediction = classes[top1]
+    top5_prediction = []
+    for idx in top5[0]:
+      top5_prediction.append(classes[idx])
   print('prediction', prediction)
+  print('top5_prediction', top5_prediction)
   print('='*10)
 
-  return prediction
+  return prediction, top5_prediction
 
 
 @csrf_exempt  # CSRF 검증에서 제외 - 외부 클라이언트로부터 POST 요청을 받을 때 CSRF 토큰을 확인하지 않음
 def upload(request):
   if request.method == 'POST' and request.FILES['imageInput']:
-    image = request.FILES['imageInput']
+    file = request.FILES['imageInput']
 
-    image_data = image.read()
-    image_np = np.frombuffer(image_data, np.uint8)
-    image_cv2 = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
+    file_path = 'web/static/uploaded_img/uploaded_img.jpg'
+    fp = open(file_path, 'wb')
+    for chunk in file.chunks():
+      fp.write(chunk)
+    fp.close()
 
-    # 이미지를 파이토치 텐서로 변환
-    image_tensor = torch.from_numpy(image_cv2).permute(2, 0, 1).float()
-    # 배치 차원 추가
-    image_tensor = image_tensor.unsqueeze(0)
-
-    data_transforms = transforms.Compose([
-      transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
-
-    # 이미지를 정규화하고 ToTensor 변환을 수행
-    image_tensor = data_transforms(image_tensor)
+    image_tensor = preprocess(file_path)
 
     # 추론
-    prediction = predict(image_tensor)
+    prediction, top5_prediction = predict(image_tensor)
     json_path = glob.glob(f'D:/data/training/labels/extracted_all/{prediction}_json/*.json')[0]
 
     with open(json_path, 'r', encoding='utf-8') as pill_data:
@@ -86,13 +106,14 @@ def upload(request):
       pill_company = pill_data['images'][0]['dl_company']
       pill_class = pill_data['images'][0]['di_class_no']
 
-      response_data = {'prediction': prediction,
-                       'pill_name': pill_name,
-                       'pill_company': pill_company,
-                       'pill_class': pill_class,
-                       'pill_image': pill_image}
-      print(f'===== {prediction} 추론 완료 =====')
-      return JsonResponse(response_data)
+    response_data = {'prediction': prediction,
+                     'pill_name': pill_name,
+                     'pill_company': pill_company,
+                     'pill_class': pill_class,
+                     'pill_image': pill_image,
+                     'top5_prediction': top5_prediction}
+    print(f'===== {prediction} 추론 완료 =====')
+    return JsonResponse(response_data)
 
   return render(request, 'index.html')
 
