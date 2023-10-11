@@ -1,15 +1,17 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block content %}
-<div class="col-6">
-    <h1>MyPill</h1>
-    <h4 style="color: red">주의!</h4>
-    <p>식별문자가 잘 나온 앞면 사진으로 첨부해주세요.</p>
-    <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
+<div id="content" class="container-lg text-center" style="margin: 0 auto;">
+    <img src="{% static 'img/pills2.png' %}" alt="pills" width="800px" height="300px" style="margin: 50px auto;">
+<!--    <h1 class="text-center" style="padding-top: 50px;"> PILLosophy</h1>-->
+    <h3 class="text-center" style="color: palevioletred; height: 40px; font-weight: bold;">💡 주의 💡</h3>
+    <p class="text-center"><strong>식별문자</strong>가 잘 나온 <strong>앞면</strong> 사진으로 첨부해주세요.</p>
+    <form class="d-flex justify-content-center" id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
         <input type="file" name="imageInput" id="imageInput">
         <input type="submit" value="업로드">
     </form>
-    <div id="resultDiv"></div>
 </div>
+<div id="resultDiv" class="container-lg justify-content-center text-center" style="margin: 50px auto;"></div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function() {
@@ -30,14 +32,16 @@ $(document).ready(function() {
                 var pill_company = response.pill_company;
                 var pill_class = response.pill_class;
                 var pill_image = response.pill_image;
+                var top5_prediction = response.top5_prediction;
 
                 // 예측 결과를 resultDiv에 표시하거나 다른 작업 수행
-                 $("#resultDiv").html("<ul>" +
-                    "<li>분류 결과: " + prediction + "</li>" +
-                    "<li>약 이름: " + pill_name + "</li>" +
-                    "<li>제조사: " + pill_company + "</li>" +
-                    "<li>분류 번호: " + pill_class + "</li>" +
-                    "<li>약 이미지: <img src='" + pill_image + "' alt='약 이미지' width='800px'></li>" +
+                 $("#resultDiv").html("<ul style='list-style-type: none;'>" +
+                    "<li><strong>분류 결과</strong> " + prediction + "</li>" +
+                    "<li><strong>약 이름</strong> " + pill_name + "</li>" +
+                    "<li><strong>제조사</strong> " + pill_company + "</li>" +
+                    "<li><strong>분류 번호</strong> " + pill_class + "</li>" +
+                    "<li><strong>top5 예측 클래스</strong> " + top5_prediction + "</li>" +
+                    "<li><img src='" + pill_image + "' alt='약 이미지' width='500px'></li>" +
                     "</ul>");
             },
             error: function(error) {
