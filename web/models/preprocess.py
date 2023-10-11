@@ -179,7 +179,7 @@ if __name__ == '__main__':
   # 압축해제
   # extract_all(label_path)
   # extract_all(source_path)
-  # crop(img_paths, crop_paths)
-  result_folders, result_count = find_folders_with_large_file_count(crop_paths, 216)
+  crop(img_paths, crop_paths)
+  # result_folders, result_count = find_folders_with_large_file_count(crop_paths, 216)
 
 
