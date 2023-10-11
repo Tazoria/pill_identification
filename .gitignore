@@ -167,3 +167,4 @@ info
 save
 web/models/no_json.txt
 web/static/uploaded_img/uploaded_img.jpg
+web/models/test.ipynb
