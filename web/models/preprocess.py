@@ -1,16 +1,60 @@
-import os
-import shutil
 import json
+import requests
+from tqdm import tqdm
+import os
 from time import time
 import glob
 from tqdm import tqdm
 import zipfile
 import cv2
+from PIL import Image
 import torch
 import torchvision.transforms as transforms
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
+from shutil import copyfile
+from torchvision import datasets
+
+
+# 클래스 이름을 가져오기 위한 함수
+def split_train_valid_dir(data_root='D:/data/training/sources/cropped'):
+  # 분할된 데이터를 저장할 폴더 경로
+  train_root = os.path.join(data_root, 'train')
+  valid_root = os.path.join(data_root, 'valid')
+
+  # 클래스 이름 목록 가져오기
+  class_names = os.listdir(data_root)
+
+  # 클래스별로 train과 valid 폴더 생성
+  for class_name in class_names:
+      train_class_dir = os.path.join(train_root, class_name)
+      valid_class_dir = os.path.join(valid_root, class_name)
+
+      os.makedirs(train_class_dir, exist_ok=True)
+      os.makedirs(valid_class_dir, exist_ok=True)
+
+  # 데이터를 8:2 비율로 나누어 train과 valid 폴더에 복사
+    for class_name in tqdm(class_names):
+      class_dir = os.path.join(data_root, class_name)
+      train_class_dir = os.path.join(train_root, class_name)
+      valid_class_dir = os.path.join(valid_root, class_name)
+
+      # 클래스 폴더 안의 모든 파일 목록 가져오기
+      files = os.listdir(class_dir)
+      num_files = len(files)
+      num_train_files = int(0.8 * num_files)
+
+      # 파일을 train과 valid 폴더에 복사
+      for i, file in enumerate(files):
+          src_path = os.path.join(class_dir, file)
+          if i < num_train_files:
+              dst_path = os.path.join(train_class_dir, file)
+          else:
+              dst_path = os.path.join(valid_class_dir, file)
+          copyfile(src_path, dst_path)
+
+  print('>>>>> done <<<<<')
 
 
 def extract_all(path):
@@ -168,6 +212,70 @@ def find_folders_with_large_file_count(crop_paths, threshold):
   print('데이터 수: ', result_count[:5])
 
   return result_folders, result_count
+
+
+'''
+[ 테스트 데이터셋 구성 ]
+- 각 알약의 클래스별로 웹이미지를 하나씩 다운로드하고 CV2를 이용해 ROI crop합니다
+- 없는 경우는 제외합니다(71개는 이미지가 존재하지 않음).
+'''
+
+# 온라인에서 url을 통해 이미지를 다운로드
+def get_samples():
+  # 각 클래스의 첫번째 json파일을 읽어들이기
+  folder_paths = glob.glob('D:/data/training/labels/extracted_all/*')
+  save_path = r'D:/data/training/sources/test'
+  count = 0
+
+  for folder_path in tqdm(folder_paths):
+    # 폴더 내의 JSON 파일 목록을 가져오고 정렬합니다.
+    json_files = glob.glob(os.path.join(folder_path, '*.json'))
+
+    if json_files:
+      first_json_file = json_files[0]  # 첫 번째 JSON 파일
+      file_name = os.path.basename(first_json_file).split('_')[0] + '.jpg'
+      full_save_path = os.path.join(save_path, file_name)
+
+      with open(first_json_file, 'r', encoding='utf-8') as json_file:
+        data = json.load(json_file)
+        url = data['images'][0]['img_key']
+
+        try:
+          response = requests.get(url)
+
+          if response.status_code == 200:
+            with open(full_save_path, 'wb') as file:
+              file.write(response.content)
+            print(f'이미지 다운로드 및 저장 완료: {full_save_path}')
+            count += 1
+          else:
+            print(f"이미지를 다운로드할 수 없습니다. 상태 코드: {response.status_code}")
+        except Exception as e:
+          print(f"이미지 다운로드 중 오류 발생: {str(e)}")
+          # 이미지를 찾을 수 없는 경우, 예외 처리로 인해 다음 이미지로 진행됩니다.
+          continue
+
+  print(f'{count}개의 이미지 샘플 다운로드 완료')
+
+
+# url로 다운로드 받은 이미지 파일들을 ROI 크롭하는 함수
+def get_crop():
+  image_paths = glob.glob(r'D:/data/training/sources/test/*.jpg')
+  for img_path in image_paths:
+    img = cv2.imread(img_path)
+    save_path = img_path.replace('.jpg', '') + os.path.basename(img_path)
+    x, y, w, h = cv2.selectROI('img', img, False)
+    if w and h:
+      roi = img[y:y + h, x:x + w]
+      cv2.imwrite(save_path, roi)  # ROI 영역만 파일로 저장
+      cv2.imshow('cropped', roi)  # ROI 지정 영역을 새창으로 표시
+      cv2.moveWindow('cropped', 0, 0)  # 새창을 화면 측 상단으로 이동
+
+    cv2.imshow('img', img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+
 
 
 if __name__ == '__main__':
