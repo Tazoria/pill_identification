@@ -32,7 +32,7 @@ def get_transform(is_train=True, is_grayscale=False):
     if is_grayscale:
       transform = transforms.Compose([
         transforms.Grayscale(num_output_channels=3),
-        transforms.CenterCrop((224, 224)),  # 이미지 중심부 자르기
+        transforms.Resize((224, 224)),  # 이미지 중심부 자르기
         transforms.ToTensor(),  # 이미지를 텐서로 변환
         transforms.Normalize([0.485], [0.229])  # Grayscale 정규화
       ])
@@ -46,7 +46,7 @@ def get_transform(is_train=True, is_grayscale=False):
   return transform
 
 
-def get_dataloader(data_dir, batch_size=126, is_train=False, is_grayscale=False):
+def get_dataloader(data_dir, batch_size=512, is_train=False, is_grayscale=False):
   if is_train:
     # 데이터 변환 설정
     transform = get_transform(is_train=True, is_grayscale=is_grayscale)
@@ -70,7 +70,7 @@ if __name__ == '__main__':
   # get_crop()
 
   test_loader = get_dataloader(data_dir=r'D:/data/training/sources/test',
-                              batch_size=128, is_train=False, is_grayscale=False)
+                               batch_size=128, is_train=False, is_grayscale=False)
   print(test_loader)
 
   # 데이터로더가 잘 생성됐는지 보기
