@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
+
+<!--
+ ajax부분 이미지 경로설정이 너무 야매임 -> 개선요함
+ -->
+
 <div id="content" class="container-lg text-center" style="margin: 0 auto;">
     <img src="{% static 'img/main_image.png' %}" alt="pills" width="800px" height="300px" style="margin: 50px auto;">
 <!--    <h1 class="text-center" style="padding-top: 50px;"> PILLosophy</h1>-->
@@ -11,40 +16,59 @@
         <input type="submit" value="업로드">
     </form>
 </div>
-<div id="resultDiv" class="container-lg justify-content-center text-center" style="margin: 50px auto;"></div>
+<div id="resultDiv" class="container-lg" style="margin: 50px auto;">
+</div>
+<div id="resultImg" class="container-lg d-flex justify-content-evenly" style="display: none; margin-bottom: 100px; width:800px;">
+    <img id="input_image" src="" alt="" width="300px" style="">
+    <img id="output_image" src="" alt="" width="400px">
+</div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function() {
-    $("#uploadForm").submit(function(event) {
+    $("#uploadForm").submit(function (event) {
         event.preventDefault();
         var formData = new FormData(this);
-
         $.ajax({
             type: "POST",
             url: "/upload",
             data: formData,
             processData: false,
             contentType: false,
-            success: function(response) {
+            success: function (response) {
                 // 결과를 처리하는 로직을 여기에 추가
                 var prediction = response.prediction;
                 var pill_name = response.pill_name;
                 var pill_company = response.pill_company;
                 var pill_class = response.pill_class;
-                var pill_image = response.pill_image;
+                var input_image = response.input_image;
+                var output_image = response.output_image;
                 var top5_prediction = response.top5_prediction;
 
+                var html_content = `
+                    <div id="predict" style="margin: 0 auto; width: 500px;">
+                        <ul style='list-style-type: none;'>
+                            <li><strong style="color: blueviolet">분류 결과<br/></strong>${prediction}</li>
+                            <li><strong style="color: blueviolet">TOP5 예측 클래스<br/></strong>${top5_prediction}</li>
+                        </ul>
+                    </div>
+                    <br />
+                    <div id="pill_info" style="border:2px dashed skyblue; padding: 50px; width:500px; margin: 0 auto;">
+                        <ul style='list-style-type: none; width: 300px; margin: 0 auto; padding: 0;'>
+                            <li><strong>약 이름 </strong>${pill_name}</li>
+                            <li><strong>제조사 </strong>${pill_company}</li>
+                            <li><strong>분류 번호 </strong>${pill_class}</li>
+                        </ul>
+                    </div>`;
+
                 // 예측 결과를 resultDiv에 표시하거나 다른 작업 수행
-                 $("#resultDiv").html("<ul style='list-style-type: none;'>" +
-                    "<li><strong>분류 결과</strong> " + prediction + "</li>" +
-                    "<li><strong>약 이름</strong> " + pill_name + "</li>" +
-                    "<li><strong>제조사</strong> " + pill_company + "</li>" +
-                    "<li><strong>분류 번호</strong> " + pill_class + "</li>" +
-                    "<li><strong>top5 예측 클래스</strong> " + top5_prediction + "</li>" +
-                    "<li><img src='" + pill_image + "' alt='약 이미지' width='500px'></li>" +
-                    "</ul>");
+                $("#resultDiv").html(html_content);
+
+                $('#output_image').attr('src', output_image)
+                $('#input_image').attr('src', input_image)
+                $('#resultImg').show()
             },
-            error: function(error) {
+            error: function (error) {
                 console.error(error);
             }
         });
