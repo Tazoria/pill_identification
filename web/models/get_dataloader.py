@@ -12,7 +12,7 @@ def get_transform(is_train=True, is_grayscale=False):
     # 그레이스케일 적용시
     if is_grayscale:
       transform = transforms.Compose([
-        transforms.RandAugment(num_ops=4, magnitude=9, fill=[128]),  # 적용할 변환의 수, 강도, 여백채우기 색깔
+        transforms.RandAugment(num_ops=4, magnitude=9),  # 적용할 변환의 수, 강도
         transforms.Grayscale(num_output_channels=3),
         transforms.Resize((224, 224)),  # 고정된 크기로 이미지 크기 조정
         transforms.ToTensor(),  # 이미지를 텐서로 변환
@@ -21,7 +21,7 @@ def get_transform(is_train=True, is_grayscale=False):
     # 그레이스케일 미적용시
     else:
       transform = transforms.Compose([
-        transforms.RandAugment(num_ops=4, magnitude=9, fill=[128]),
+        transforms.RandAugment(num_ops=4, magnitude=9),
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])  # RGB 정규화
