@@ -23,7 +23,7 @@ def home(request):
 
 def get_model():
   # 모델 및 다른 정보 불러오기
-  load_path = 'web/models/save/[Mobilenet] Mobilenet_RandAugment(512).pth'
+  load_path = 'web/models/save/[Mobilenet] Mobilenet_RandAugment(126).pth'
   checkpoint = torch.load(load_path)
   model = CustomMobileNetV3Large(num_classes=500)
   model.load_state_dict(checkpoint['model_state_dict'])  # 모델 가중치 불러오기
@@ -86,13 +86,13 @@ def upload(request):
   if request.method == 'POST' and request.FILES['imageInput']:
     file = request.FILES['imageInput']
 
-    file_path = 'web/static/uploaded_img/uploaded_img.jpg'
-    fp = open(file_path, 'wb')
+    upload_path = 'web/static/img/uploaded_img.jpg'
+    fp = open(upload_path, 'wb')
     for chunk in file.chunks():
       fp.write(chunk)
     fp.close()
 
-    image_tensor = preprocess(file_path)
+    image_tensor = preprocess(upload_path)
 
     # 추론
     prediction, top5_prediction = predict(image_tensor)
@@ -101,19 +101,20 @@ def upload(request):
     with open(json_path, 'r', encoding='utf-8') as pill_data:
       pill_data = json.load(pill_data)
       pill_name = pill_data['images'][0]['dl_name']
-      pill_image = pill_data['images'][0]['img_key']
       pill_company = pill_data['images'][0]['dl_company']
       pill_class = pill_data['images'][0]['di_class_no']
+      output_image = pill_data['images'][0]['img_key']
 
     response_data = {'prediction': prediction,
                      'pill_name': pill_name,
                      'pill_company': pill_company,
                      'pill_class': pill_class,
-                     'pill_image': pill_image,
-                     'top5_prediction': top5_prediction}
+                     'top5_prediction': top5_prediction,
+                     'input_image': 'http://127.0.0.1:8000/static/img/uploaded_img.jpg',
+                     'output_image': output_image
+                     }
     print(f'===== {prediction} 추론 완료 =====')
     return JsonResponse(response_data)
-
   return render(request, 'index.html')
 
 
