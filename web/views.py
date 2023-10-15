@@ -23,7 +23,7 @@ def home(request):
 
 def get_model():
   # 모델 및 다른 정보 불러오기
-  load_path = 'web/models/save/[Mobilenet] Mobilenet_RandAugment(126).pth'
+  load_path = 'web/models/save/ShuffleNetV2_epoch5_quntize(False).pth'
   checkpoint = torch.load(load_path)
   model = CustomMobileNetV3Large(num_classes=500)
   model.load_state_dict(checkpoint['model_state_dict'])  # 모델 가중치 불러오기

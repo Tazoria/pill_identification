@@ -80,12 +80,12 @@ def split_train_valid_dir(data_root='D:/data/training/sources/cropped'):
     files = os.listdir(class_dir)
     random.shuffle(files)  # 수정된 부분: 파일 목록을 무작위로 섞음
     num_files = len(files)
-    num_train_files = int(0.8 * num_files)
+    num_train_files = int(0.9 * num_files)
 
     # 파일을 train과 valid 폴더에 복사
     for i, file in enumerate(files):
       src_path = os.path.join(class_dir, file)
-      if i < num_train_files:
+      if i <= num_train_files:
         dst_path = os.path.join(train_class_dir, file)
       else:
         dst_path = os.path.join(valid_class_dir, file)
