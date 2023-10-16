@@ -16,8 +16,7 @@
         <input type="submit" value="업로드">
     </form>
 </div>
-<div id="resultDiv" class="container-lg" style="margin: 50px auto;">
-</div>
+<div id="resultDiv" class="container-lg" style="margin: 50px auto;"></div>
 <div id="resultImg" class="container-lg d-flex justify-content-evenly" style="display: none; margin-bottom: 100px; width:800px;">
     <img id="input_image" src="" alt="" width="300px" style="">
     <img id="output_image" src="" alt="" width="400px">
@@ -28,7 +27,7 @@
 $(document).ready(function() {
     $("#uploadForm").submit(function (event) {
         event.preventDefault();
-        var formData = new FormData(this);
+        let formData = new FormData(this);
         $.ajax({
             type: "POST",
             url: "/upload",
@@ -37,15 +36,15 @@ $(document).ready(function() {
             contentType: false,
             success: function (response) {
                 // 결과를 처리하는 로직을 여기에 추가
-                var prediction = response.prediction;
-                var pill_name = response.pill_name;
-                var pill_company = response.pill_company;
-                var pill_class = response.pill_class;
-                var input_image = response.input_image;
-                var output_image = response.output_image;
-                var top5_prediction = response.top5_prediction;
+                let prediction = response.prediction;
+                let pill_name = response.pill_name;
+                let pill_company = response.pill_company;
+                let pill_class = response.pill_class;
+                let input_image = response.input_image;
+                let output_image = response.output_image;
+                let top5_prediction = response.top5_prediction;
 
-                var html_content = `
+                let html_content = `
                     <div id="predict" style="margin: 0 auto; width: 500px;">
                         <ul style='list-style-type: none;'>
                             <li><strong style="color: blueviolet">분류 결과<br/></strong>${prediction}</li>
@@ -64,9 +63,9 @@ $(document).ready(function() {
                 // 예측 결과를 resultDiv에 표시하거나 다른 작업 수행
                 $("#resultDiv").html(html_content);
 
-                $('#output_image').attr('src', output_image)
-                $('#input_image').attr('src', input_image)
-                $('#resultImg').show()
+                $('#output_image').attr('src', output_image);
+                $('#input_image').attr('src', input_image);
+                $('#resultImg').show();
             },
             error: function (error) {
                 console.error(error);
