@@ -1,8 +1,6 @@
 import json
 import pickle
-import cv2
 from PIL import Image
-import numpy as np
 import torch
 import glob
 from torchvision.transforms import transforms
@@ -23,7 +21,7 @@ def home(request):
 
 def get_model():
   # 모델 및 다른 정보 불러오기
-  load_path = 'web/models/save/ShuffleNetV2_epoch5_quntize(False).pth'
+  load_path = 'web/models/save/[Mobilenet] Mobilenet_RandAugment(126).pth'
   checkpoint = torch.load(load_path)
   model = CustomMobileNetV3Large(num_classes=500)
   model.load_state_dict(checkpoint['model_state_dict'])  # 모델 가중치 불러오기
@@ -78,6 +76,8 @@ def predict(image_tensor):
   print('top5_prediction', top5_prediction)
   print('='*10)
 
+  print(prediction, top5_prediction)
+
   return prediction, top5_prediction
 
 
@@ -91,7 +91,6 @@ def upload(request):
     for chunk in file.chunks():
       fp.write(chunk)
     fp.close()
-
     image_tensor = preprocess(upload_path)
 
     # 추론
@@ -113,6 +112,7 @@ def upload(request):
                      'input_image': 'http://127.0.0.1:8000/static/img/uploaded_img.jpg',
                      'output_image': output_image
                      }
+
     print(f'===== {prediction} 추론 완료 =====')
     return JsonResponse(response_data)
   return render(request, 'index.html')
